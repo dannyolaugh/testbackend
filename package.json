@@ -1,0 +1,26 @@
+{
+  "name": "imessage-ai-backend",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "tsc",
+    "deploy": "serverless deploy",
+    "deploy:dev": "serverless deploy --stage dev",
+    "deploy:prod": "serverless deploy --stage prod",
+    "remove": "serverless remove",
+    "logs": "serverless logs -f askAI -t",
+    "invoke": "serverless invoke local -f askAI --path test-event.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "openai": "^4.73.0",
+    "@google/generative-ai": "^0.21.0",
+    "aws-sdk": "^2.1691.0",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.2",
+    "@types/aws-lambda": "^8.10.145"
+  }
+}

@@ -1,0 +1,84 @@
+service: imessage-ai-assistant
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+  environment:
+    ANTHROPIC_API_KEY: ${env:ANTHROPIC_API_KEY}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    GOOGLE_API_KEY: ${env:GOOGLE_API_KEY}
+    PERPLEXITY_API_KEY: ${env:PERPLEXITY_API_KEY}
+    DYNAMODB_TABLE: ${self:service}-${self:provider.stage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+# Configure built-in esbuild
+build:
+  esbuild:
+    bundle: true
+    minify: true
+    sourcemap: true
+    target: node18
+    # Don't bundle these - they'll be in node_modules
+    external:
+      - aws-sdk
+    # Include node_modules for these packages
+    packages: external
+
+package:
+  patterns:
+    - '!node_modules/aws-sdk/**'
+
+functions:
+  askAI:
+    handler: src/handlers/askAI.handler
+    events:
+      - httpApi:
+          path: /api/ask
+          method: post
+  
+  getUserPreferences:
+    handler: src/handlers/userPreferences.getHandler
+    events:
+      - httpApi:
+          path: /api/preferences/{userId}
+          method: get
+  
+  saveUserPreferences:
+    handler: src/handlers/userPreferences.saveHandler
+    events:
+      - httpApi:
+          path: /api/preferences
+          method: post
+
+resources:
+  Resources:
+    UserPreferencesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: timestamp
+            AttributeType: N
+        KeySchema:
+          - AttributeName: userId
+            KeyType: HASH
+          - AttributeName: timestamp
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
