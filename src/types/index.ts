@@ -5,6 +5,10 @@ export enum AIModel {
   PERPLEXITY = 'perplexity'
 }
 
+export enum ImageModel {
+  DALLE = 'dalle' // Placeholder - we only use Banana.dev but keeping for frontend compatibility
+}
+
 export interface Citation {
   title: string;
   url: string;
@@ -15,6 +19,13 @@ export interface AIResponse {
   text: string;
   citations: Citation[];
   model: AIModel;
+  timestamp: number;
+}
+
+export interface ImageResponse {
+  imageUrl: string;
+  prompt: string;
+  model: ImageModel;
   timestamp: number;
 }
 

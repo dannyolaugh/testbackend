@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { AIModel, AIResponse, Citation } from '../types';
+import { AIModel, AIResponse, Citation, ImageModel, ImageResponse } from '../types';
 
 export class AIService {
   private anthropic: Anthropic;
@@ -12,15 +12,15 @@ export class AIService {
     this.anthropic = new Anthropic({
       apiKey: process.env.ANTHROPIC_API_KEY || ''
     });
-    
+
     // Only initialize if API key exists
-    this.openai = process.env.OPENAI_API_KEY 
-      ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-      : null;
-    
+    this.openai = process.env.OPENAI_API_KEY
+        ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+        : null;
+
     this.googleAI = process.env.GOOGLE_API_KEY
-      ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
-      : null;
+        ? new GoogleGenerativeAI(process.env.GOOGLE_API_KEY)
+        : null;
   }
 
   async askClaude(question: string): Promise<AIResponse> {
@@ -193,12 +193,59 @@ export class AIService {
     }
   }
 
+  // Image Generation Method - DALL-E 3
+  async generateImage(prompt: string): Promise<ImageResponse> {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured');
+    }
+
+    try {
+      console.log('🎨 Starting DALL-E 3 image generation');
+      console.log('📝 Prompt:', prompt);
+
+      const response = await this.openai.images.generate({
+        model: 'dall-e-3',
+        prompt: prompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard',
+        response_format: 'url'
+      });
+
+      // Check if response and data exist
+      if (!response || !response.data || response.data.length === 0) {
+        throw new Error('No image data returned from DALL-E 3');
+      }
+
+      const imageUrl = response.data[0]?.url;
+      if (!imageUrl) {
+        throw new Error('No image URL returned from DALL-E 3');
+      }
+
+      console.log('✅ DALL-E 3 image generated successfully');
+      console.log('🖼️ Image URL:', imageUrl);
+
+      return {
+        imageUrl,
+        prompt,
+        model: ImageModel.DALLE,
+        timestamp: Date.now()
+      };
+    } catch (error) {
+      console.error('DALL-E 3 API error:', error);
+      if (error instanceof Error) {
+        throw new Error(`Failed to generate image: ${error.message}`);
+      }
+      throw new Error('Failed to generate image with DALL-E 3');
+    }
+  }
+
   private extractCitations(text: string): Citation[] {
     const citations: Citation[] = [];
-    
+
     const urlRegex = /https?:\/\/[^\s]+/g;
     const urls = text.match(urlRegex) || [];
-    
+
     urls.forEach((url, index) => {
       citations.push({
         title: `Source ${index + 1}`,
