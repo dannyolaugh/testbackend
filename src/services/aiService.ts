@@ -127,7 +127,7 @@ export class AIService {
             role: 'user',
             content: question
           }],
-          max_tokens: 150,
+          max_tokens: 1024,
           temperature: 0.7
         }),
         signal: controller.signal
@@ -193,37 +193,38 @@ export class AIService {
     }
   }
 
-  // Image Generation Method - DALL-E 3
+  // Image Generation Method - GPT Image 1
   async generateImage(prompt: string): Promise<ImageResponse> {
     if (!this.openai) {
       throw new Error('OpenAI API key not configured');
     }
 
     try {
-      console.log('🎨 Starting DALL-E 3 image generation');
+      console.log('🎨 Starting GPT Image 1 generation');
       console.log('📝 Prompt:', prompt);
 
       const response = await this.openai.images.generate({
-        model: 'dall-e-3',
+        model: 'gpt-image-1.5',
         prompt: prompt,
         n: 1,
         size: '1024x1024',
-        quality: 'standard',
-        response_format: 'url'
       });
 
       // Check if response and data exist
       if (!response || !response.data || response.data.length === 0) {
-        throw new Error('No image data returned from DALL-E 3');
+        throw new Error('No image data returned from GPT Image 1');
       }
 
-      const imageUrl = response.data[0]?.url;
-      if (!imageUrl) {
-        throw new Error('No image URL returned from DALL-E 3');
+      const imageBase64 = response.data[0]?.b64_json;
+      if (!imageBase64) {
+        throw new Error('No image data returned from GPT Image 1');
       }
 
-      console.log('✅ DALL-E 3 image generated successfully');
-      console.log('🖼️ Image URL:', imageUrl);
+      console.log('✅ GPT Image 1 generated successfully');
+      console.log('📊 Image data size:', imageBase64.length, 'characters');
+
+      // Return the base64 data as a data URL
+      const imageUrl = `data:image/png;base64,${imageBase64}`;
 
       return {
         imageUrl,
@@ -232,11 +233,11 @@ export class AIService {
         timestamp: Date.now()
       };
     } catch (error) {
-      console.error('DALL-E 3 API error:', error);
+      console.error('GPT Image 1 API error:', error);
       if (error instanceof Error) {
         throw new Error(`Failed to generate image: ${error.message}`);
       }
-      throw new Error('Failed to generate image with DALL-E 3');
+      throw new Error('Failed to generate image with GPT Image 1');
     }
   }
 

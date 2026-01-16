@@ -24,12 +24,12 @@ export const handler = async (
             });
         }
 
-        console.log(`Generating image with DALL-E 3, prompt: ${request.prompt}`);
+        console.log(`Generating image with GPT Image 1, prompt: ${request.prompt}`);
 
-        // Generate image using DALL-E 3
+        // Generate image using GPT Image 1
         const response = await aiService.generateImage(request.prompt);
 
-        console.log('Image generated successfully:', response.imageUrl);
+        console.log('Image generated successfully with GPT Image 1');
 
         return createResponse(200, response);
 
